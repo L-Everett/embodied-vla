@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 # 公共环境设置，被其它脚本 source。
-# 自动适配 AutoDL（数据盘 /root/autodl-tmp + 学术加速）与普通 Linux。
+# 自动适配 AutoDL（数据盘 /root/autodl-tmp）与普通 Linux。
+# 注意：不在全局开 network_turbo 代理——AutoDL 官方提示代理会让国内 pip/conda 源更慢。
+#       只有访问 GitHub 时才临时开代理（见 setup_env.sh 的 clone 部分）。
 
-# AutoDL 学术加速（GitHub / HuggingFace）
-if [ -f /etc/network_turbo ]; then
-  # shellcheck disable=SC1091
-  source /etc/network_turbo 2>/dev/null || true
-fi
-
-# 数据根目录：AutoDL 用数据盘，否则用家目录
 if [ -d /root/autodl-tmp ]; then
   DATA_ROOT="${DATA_ROOT:-/root/autodl-tmp}"
 else
@@ -22,5 +17,8 @@ export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export MUJOCO_GL="${MUJOCO_GL:-egl}"
 export WANDB_MODE="${WANDB_MODE:-disabled}"
 export TOKENIZERS_PARALLELISM=false
+
+# 关闭代理，保证国内 pip/conda 源速度（GitHub 相关见调用处临时开启）
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY 2>/dev/null || true
 
 mkdir -p "$HF_HOME" "$PIP_CACHE_DIR" 2>/dev/null || true

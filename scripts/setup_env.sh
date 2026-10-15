@@ -30,11 +30,15 @@ fi
 conda activate "$ENV_NAME"
 
 echo "==> [3/4] 安装 LeRobot 到 $LEROBOT_DIR"
-if [ -d "$LEROBOT_DIR/.git" ]; then
-  git -C "$LEROBOT_DIR" fetch --all --tags
-else
-  git clone https://github.com/huggingface/lerobot.git "$LEROBOT_DIR"
+# 访问 GitHub 需要代理（AutoDL 学术加速）；用子 shell 开启，避免污染后面的 pip/conda
+if [ ! -d "$LEROBOT_DIR/.git" ]; then
+  (
+    source /etc/network_turbo 2>/dev/null || true
+    git clone https://github.com/huggingface/lerobot.git "$LEROBOT_DIR"
+  )
 fi
+# 后续 pip 走国内源，确保代理已关
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY 2>/dev/null || true
 if [ -n "$LEROBOT_REF" ]; then git -C "$LEROBOT_DIR" checkout "$LEROBOT_REF"; fi
 pip install -U pip $PIP_INDEX
 pip install -e "${LEROBOT_DIR}[libero,smolvla,pi,peft,evaluation]" $PIP_INDEX
