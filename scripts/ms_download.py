@@ -25,13 +25,24 @@ def _get_json(url):
 
 def list_files(repo, kind, revision):
     for ep in ("tree", "files"):
-        url = f"{BASE}/api/v1/{kind}/{repo}/repo/{ep}?Revision={revision}&Recursive=true"
-        try:
-            data = _get_json(url)
-        except Exception:
-            continue
-        files = (data.get("Data") or {}).get("Files") or []
-        paths = [f["Path"] for f in files if f.get("Type") == "blob"]
+        paths = []
+        page = 1
+        while True:
+            url = (
+                f"{BASE}/api/v1/{kind}/{repo}/repo/{ep}"
+                f"?Revision={revision}&Recursive=true&PageNumber={page}&PageSize=1000"
+            )
+            try:
+                data = _get_json(url)
+            except Exception:
+                break
+            dd = data.get("Data") or {}
+            files = dd.get("Files") or []
+            paths += [f["Path"] for f in files if f.get("Type") == "blob"]
+            total = dd.get("TotalCount") or data.get("TotalCount") or 0
+            if len(files) < 1000 or (total and len(paths) >= total):
+                break
+            page += 1
         if paths:
             return paths
     raise RuntimeError(f"无法获取文件列表: {kind}/{repo}")
