@@ -14,6 +14,7 @@ export DATA_ROOT
 export HF_HOME="${HF_HOME:-$DATA_ROOT/hf}"
 export PIP_CACHE_DIR="${PIP_CACHE_DIR:-$DATA_ROOT/.pip-cache}"
 export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+export HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 export MUJOCO_GL="${MUJOCO_GL:-egl}"
 export WANDB_MODE="${WANDB_MODE:-disabled}"
 export TOKENIZERS_PARALLELISM=false

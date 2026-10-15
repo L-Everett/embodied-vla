@@ -10,7 +10,9 @@ source scripts/_env.sh
 ENV_NAME="${ENV_NAME:-embvla}"
 PY_VER="${PY_VER:-3.10}"
 LEROBOT_SPEC="${LEROBOT_SPEC:-lerobot[libero,smolvla,pi,peft,evaluation]}"
-PIP_INDEX="-i https://pypi.tuna.tsinghua.edu.cn/simple"
+PIP_INDEX="${PIP_INDEX:--i https://mirrors.aliyun.com/pypi/simple}"
+# AutoDL 镜像自带 torch/CUDA，设 USE_BASE_ENV=1 直接复用，省去几 GB 下载
+USE_BASE_ENV="${USE_BASE_ENV:-0}"
 
 echo "==> 平台: DATA_ROOT=$DATA_ROOT (AutoDL=$([ -d /root/autodl-tmp ] && echo yes || echo no))"
 echo "==> HF_HOME=$HF_HOME"
@@ -23,15 +25,20 @@ $SUDO apt-get install -y git ffmpeg build-essential libegl1 libgles2 libgl1 libg
 echo "==> [2/4] conda 环境 $ENV_NAME (python $PY_VER)"
 # shellcheck disable=SC1091
 source "$(conda info --base)/etc/profile.d/conda.sh"
-if ! conda env list | grep -qE "/${ENV_NAME}\$"; then
-  conda create -n "$ENV_NAME" "python=$PY_VER" -y
+if [ "$USE_BASE_ENV" = "1" ]; then
+  echo "    -> 复用 base 环境（镜像已带 torch/CUDA，省下载）"
+  conda activate base
+else
+  if ! conda env list | grep -qE "/${ENV_NAME}\$"; then
+    conda create -n "$ENV_NAME" "python=$PY_VER" -y
+  fi
+  conda activate "$ENV_NAME"
 fi
-conda activate "$ENV_NAME"
 
 echo "==> [3/4] 安装 LeRobot（PyPI 国内源）: $LEROBOT_SPEC"
 unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY 2>/dev/null || true
 pip install -U pip $PIP_INDEX
-pip install "$LEROBOT_SPEC" $PIP_INDEX
+pip install "$LEROBOT_SPEC" hf_transfer $PIP_INDEX
 
 echo "==> [4/4] 环境变量（写入 ~/.bashrc）"
 MARK="# >>> embodied-vla >>>"
