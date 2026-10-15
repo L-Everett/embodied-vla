@@ -2,9 +2,10 @@
 # 冒烟测试：单套件单任务少量 episode，验证闭环能跑通
 # 用法: bash scripts/smoke.sh
 set -euo pipefail
+cd "$(dirname "$0")/.."
+# shellcheck disable=SC1091
+source scripts/_env.sh
 
-export MUJOCO_GL="${MUJOCO_GL:-egl}"
-export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 OUT="eval_logs/smoke"
 mkdir -p "$OUT"
 

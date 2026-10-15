@@ -5,6 +5,38 @@
 
 ---
 
+## AutoDL 快速流程（本次实操）
+
+> 镜像：`PyTorch 2.8.0 / py3.12 / cu12.8 / Ubuntu22.04`；卡：24GB（4090D/4090/3090）。
+> 脚本已自适应 AutoDL：自动 `source /etc/network_turbo`、数据/缓存写 `/root/autodl-tmp`。
+
+```bash
+# 0) 已登录实例后
+source /etc/network_turbo                       # GitHub/HF 加速（可重复执行）
+
+# 1) 把仓库放到【数据盘】，相对路径自动落在数据盘
+cd /root/autodl-tmp
+git clone https://github.com/L-Everett/embodied-vla.git
+cd embodied-vla
+
+# 2) 装环境（apt 装 EGL + conda 建 embvla + LeRobot，pip 走清华源）
+bash scripts/setup_env.sh
+source ~/.bashrc && conda activate embvla
+
+# 3) 预下载数据与模型（缓存到 /root/autodl-tmp/hf）
+bash scripts/download_assets.sh
+
+# 4) 冒烟测试
+bash scripts/smoke.sh
+```
+
+**省钱要点**
+- 环境配置 + 下载可改用**无卡模式**（约 0.1 元/h）完成，再切 GPU 跑训练/评测。
+- 单次会话 ≤10h、空闲自动关机；结果都在 `/root/autodl-tmp`，关机不丢。
+- 跑完务必把 `eval_logs/`、`outputs/` 下载回本地并**关机**。
+
+---
+
 ## 0. 成本预算（开工前必读）
 
 上一个 VLM 项目 20+ 元 ≈ 10~15 GPU 小时。本项目仿真评测吃时间，务必按下面**精简方案**跑。

@@ -2,6 +2,9 @@
 # SmolVLA LoRA 微调（LeRobot PEFT）
 # 用法: STEPS=30000 RANK=32 bash scripts/train_lora.sh
 set -euo pipefail
+cd "$(dirname "$0")/.."
+# shellcheck disable=SC1091
+source scripts/_env.sh
 
 STEPS="${STEPS:-30000}"
 RANK="${RANK:-32}"
@@ -10,10 +13,6 @@ LR="${LR:-1e-3}"
 DECAY_LR="${DECAY_LR:-1e-4}"
 BATCH="${BATCH:-32}"
 OUT="${OUT:-outputs/smolvla_libero_lora}"
-
-export MUJOCO_GL="${MUJOCO_GL:-egl}"
-export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
-export WANDB_MODE="${WANDB_MODE:-disabled}"
 mkdir -p "$OUT"
 
 echo "==> LoRA r=$RANK alpha=$ALPHA steps=$STEPS batch=$BATCH out=$OUT"

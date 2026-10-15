@@ -82,6 +82,7 @@ python scripts/collect_results.py eval_logs
 embodied-vla/
 ├── RUNBOOK.md            # 执行手册：预算、逐步骤命令、省钱守则、常见坑
 ├── scripts/
+│   ├── _env.sh           # 公共环境（自动适配 AutoDL：数据盘 + 学术加速）
 │   ├── setup_env.sh      # 环境安装
 │   ├── download_assets.sh# 预下载数据/模型
 │   ├── smoke.sh          # 冒烟测试
