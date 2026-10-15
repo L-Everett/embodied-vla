@@ -24,7 +24,7 @@ lerobot-train \
   --policy.path="$BASE_MODEL" \
   --dataset.repo_id=lerobot/libero \
   --dataset.root="$DATA_ROOT_DIR" \
-  --dataset.video_backend=torchcodec \
+  --dataset.video_backend="${VIDEO_BACKEND:-pyav}" \
   --policy.output_features=null \
   --policy.input_features=null \
   --policy.optimizer_lr="$LR" \
