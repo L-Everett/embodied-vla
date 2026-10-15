@@ -15,7 +15,7 @@
 
 ## 结果
 
-（跑通后填充）
+（跑通后填充，详见 [`docs/results.md`](docs/results.md)）
 
 | 阶段 | LIBERO-Spatial | Object | Goal | Long | 平均 |
 | --- | --- | --- | --- | --- | --- |
@@ -64,7 +64,11 @@ bash scripts/eval_libero.sh outputs/smolvla_libero_lora/checkpoints/last/pretrai
 
 ### 5. 域随机化鲁棒性
 
-见 [`RUNBOOK.md`](RUNBOOK.md) 第 6 步（对评测观测做扰动 / 视觉增强，对比成功率下降幅度）。
+```bash
+# 多 seed 稳定性复测（同一策略换 reset seed）
+bash scripts/eval_robustness.sh HuggingFaceVLA/smolvla_libero libero_spatial 10 1000 2000 3000
+```
+视觉/物理扰动需在观测上打补丁，方法见 [`RUNBOOK.md`](RUNBOOK.md) 第 8 步。
 
 ### 6. 汇总结果
 
@@ -83,10 +87,11 @@ embodied-vla/
 │   ├── smoke.sh          # 冒烟测试
 │   ├── eval_libero.sh    # 通用闭环评测（参数化 policy / suite / episodes）
 │   ├── train_lora.sh     # SmolVLA LoRA 微调
-│   └── collect_results.py# 汇总 eval 日志为表格
+│   ├── eval_robustness.sh# 多 seed 鲁棒性/稳定性复测
+│   └── collect_results.py# 汇总 eval_info.json 为表格
 ├── eval_logs/            # 评测输出（gitignore）
 ├── outputs/              # 训练产物（gitignore）
-└── docs/                 # 实验记录
+└── docs/                 # 实验记录（results.md）
 ```
 
 ## 硬件
