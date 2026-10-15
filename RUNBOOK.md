@@ -117,10 +117,10 @@ bash scripts/smoke.sh
 
 ```bash
 # SmolVLA zero-shot，4 suite × 10 ep = 400 ep
-bash scripts/eval_libero.sh HuggingFaceVLA/smolvla_libero all 10 eval_logs/smolvla_zs
+bash scripts/eval_libero.sh "$DATA_ROOT/models/smolvla_libero" all 10 eval_logs/smolvla_zs
 
 # π0.5 zero-shot（方案 A：只跑 spatial；方案 B：把 libero_spatial 改成 all）
-bash scripts/eval_libero.sh lerobot/pi05_libero_finetuned libero_spatial 10 eval_logs/pi05_zs --policy.n_action_steps=10
+bash scripts/eval_libero.sh "$DATA_ROOT/models/pi05_libero_finetuned" libero_spatial 10 eval_logs/pi05_zs --policy.n_action_steps=10
 ```
 
 ## 6. LoRA 微调 SmolVLA

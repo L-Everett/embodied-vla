@@ -44,10 +44,10 @@ bash scripts/smoke.sh              # 单套件单任务少量 episode，验证�
 
 ```bash
 # SmolVLA zero-shot，4 suite × 10 ep
-bash scripts/eval_libero.sh HuggingFaceVLA/smolvla_libero all 10 eval_logs/smolvla_zs
+bash scripts/eval_libero.sh "$DATA_ROOT/models/smolvla_libero" all 10 eval_logs/smolvla_zs
 
 # π0.5 zero-shot（前沿对照；省预算可只跑 libero_spatial）
-bash scripts/eval_libero.sh lerobot/pi05_libero_finetuned all 10 eval_logs/pi05_zs --policy.n_action_steps=10
+bash scripts/eval_libero.sh "$DATA_ROOT/models/pi05_libero_finetuned" all 10 eval_logs/pi05_zs --policy.n_action_steps=10
 ```
 
 ### 3. LoRA 微调

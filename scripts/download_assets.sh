@@ -1,39 +1,52 @@
 #!/usr/bin/env bash
-# 预下载数据集与模型（一次到位，避免来回等）
+# 预下载数据集与模型：优先走魔搭（国内快），失败回退 HuggingFace。
 # 用法: bash scripts/download_assets.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck disable=SC1091
 source scripts/_env.sh
 
-echo "HF_HOME=$HF_HOME  HF_ENDPOINT=$HF_ENDPOINT  DATA_ROOT=$DATA_ROOT"
+MODELS="$DATA_ROOT/models"
+DATASETS="$DATA_ROOT/datasets"
+mkdir -p "$MODELS" "$DATASETS"
+echo "HF_HOME=$HF_HOME  目标: $MODELS / $DATASETS"
 
-echo "==> 数据集 lerobot/libero (~1.9GB，视频编码，训练用)"
-python - <<'PY'
+ms_or_hf_model() {  # <repo> <local_dir>
+  local repo="$1" dir="$2"
+  echo "==> 模型 $repo -> $dir"
+  if python scripts/ms_download.py "$repo" models "$dir"; then
+    echo "   魔搭完成"
+  else
+    echo "   魔搭失败，回退 HuggingFace"
+    python - "$repo" "$dir" <<'PY'
+import sys
 from huggingface_hub import snapshot_download
-snapshot_download("lerobot/libero", repo_type="dataset", max_workers=8)
-print("dataset ok")
+snapshot_download(sys.argv[1], local_dir=sys.argv[2])
 PY
+  fi
+}
 
-echo "==> 模型 HuggingFaceVLA/smolvla_libero (~1GB)"
-python - <<'PY'
+ms_or_hf_dataset() {  # <repo> <local_dir>
+  local repo="$1" dir="$2"
+  echo "==> 数据集 $repo -> $dir"
+  if python scripts/ms_download.py "$repo" datasets "$dir"; then
+    echo "   魔搭完成"
+  else
+    echo "   魔搭失败，回退 HuggingFace"
+    python - "$repo" "$dir" <<'PY'
+import sys
 from huggingface_hub import snapshot_download
-snapshot_download("HuggingFaceVLA/smolvla_libero")
-print("smolvla_libero ok")
+snapshot_download(sys.argv[1], repo_type="dataset", local_dir=sys.argv[2], max_workers=8)
 PY
+  fi
+}
 
-echo "==> 模型 lerobot/pi05_libero_finetuned (~7GB，仅评测用)"
-python - <<'PY'
-from huggingface_hub import snapshot_download
-snapshot_download("lerobot/pi05_libero_finetuned")
-print("pi05 ok")
-PY
+ms_or_hf_model  lerobot/smolvla_base            "$MODELS/smolvla_base"
+ms_or_hf_model  HuggingFaceVLA/smolvla_libero   "$MODELS/smolvla_libero"
+ms_or_hf_model  lerobot/pi05_libero_finetuned   "$MODELS/pi05_libero_finetuned"
+ms_or_hf_dataset lerobot/libero                 "$DATASETS/libero"
 
-echo "==> 模型 lerobot/smolvla_base (~1GB，微调用)"
-python - <<'PY'
-from huggingface_hub import snapshot_download
-snapshot_download("lerobot/smolvla_base")
-print("smolvla_base ok")
-PY
-
-echo "全部下载完成。缓存位置: $HF_HOME"
+echo
+echo "全部完成。"
+echo "  模型目录: $MODELS"
+echo "  数据目录: $DATASETS/libero"

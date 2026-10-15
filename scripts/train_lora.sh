@@ -15,10 +15,15 @@ BATCH="${BATCH:-32}"
 OUT="${OUT:-outputs/smolvla_libero_lora}"
 mkdir -p "$OUT"
 
+BASE_MODEL="${SMOLVLA_BASE:-$DATA_ROOT/models/smolvla_base}"
+DATA_ROOT_DIR="${LIBERO_DATA:-$DATA_ROOT/datasets/libero}"
+
 echo "==> LoRA r=$RANK alpha=$ALPHA steps=$STEPS batch=$BATCH out=$OUT"
+echo "    base=$BASE_MODEL  data=$DATA_ROOT_DIR"
 lerobot-train \
-  --policy.path=lerobot/smolvla_base \
+  --policy.path="$BASE_MODEL" \
   --dataset.repo_id=lerobot/libero \
+  --dataset.root="$DATA_ROOT_DIR" \
   --dataset.video_backend=torchcodec \
   --policy.output_features=null \
   --policy.input_features=null \

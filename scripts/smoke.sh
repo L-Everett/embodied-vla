@@ -8,10 +8,11 @@ source scripts/_env.sh
 
 OUT="eval_logs/smoke"
 mkdir -p "$OUT"
+POLICY="${SMOLVLA_LIBERO:-$DATA_ROOT/models/smolvla_libero}"
 
-echo "==> 冒烟：libero_spatial/task_0 × 2 episodes"
+echo "==> 冒烟：$POLICY  libero_spatial/task_0 × 2 episodes"
 lerobot-eval \
-  --policy.path=HuggingFaceVLA/smolvla_libero \
+  --policy.path="$POLICY" \
   --env.type=libero \
   --env.task=libero_spatial \
   --env.task_ids="[0]" \
