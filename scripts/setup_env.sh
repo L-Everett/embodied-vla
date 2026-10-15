@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 环境安装：系统依赖 + conda 环境 + LeRobot（libero/smolvla/pi/peft）
+# 环境安装：系统依赖 + conda 环境 + LeRobot（PyPI 国内源）
 # 用法: bash scripts/setup_env.sh
-# 说明: 自动适配 AutoDL（数据盘 /root/autodl-tmp、学术加速、pip 清华源）。
+# 说明: 自动适配 AutoDL（数据盘 /root/autodl-tmp、pip 清华源、代理只用于 GitHub）。
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck disable=SC1091
@@ -9,8 +9,7 @@ source scripts/_env.sh
 
 ENV_NAME="${ENV_NAME:-embvla}"
 PY_VER="${PY_VER:-3.10}"
-LEROBOT_REF="${LEROBOT_REF:-}"          # 可选：固定 commit/tag
-LEROBOT_DIR="${LEROBOT_DIR:-$DATA_ROOT/lerobot}"
+LEROBOT_SPEC="${LEROBOT_SPEC:-lerobot[libero,smolvla,pi,peft,evaluation]}"
 PIP_INDEX="-i https://pypi.tuna.tsinghua.edu.cn/simple"
 
 echo "==> 平台: DATA_ROOT=$DATA_ROOT (AutoDL=$([ -d /root/autodl-tmp ] && echo yes || echo no))"
@@ -29,19 +28,10 @@ if ! conda env list | grep -qE "/${ENV_NAME}\$"; then
 fi
 conda activate "$ENV_NAME"
 
-echo "==> [3/4] 安装 LeRobot 到 $LEROBOT_DIR"
-# 访问 GitHub 需要代理（AutoDL 学术加速）；用子 shell 开启，避免污染后面的 pip/conda
-if [ ! -d "$LEROBOT_DIR/.git" ]; then
-  (
-    source /etc/network_turbo 2>/dev/null || true
-    git clone https://github.com/huggingface/lerobot.git "$LEROBOT_DIR"
-  )
-fi
-# 后续 pip 走国内源，确保代理已关
+echo "==> [3/4] 安装 LeRobot（PyPI 国内源）: $LEROBOT_SPEC"
 unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY 2>/dev/null || true
-if [ -n "$LEROBOT_REF" ]; then git -C "$LEROBOT_DIR" checkout "$LEROBOT_REF"; fi
 pip install -U pip $PIP_INDEX
-pip install -e "${LEROBOT_DIR}[libero,smolvla,pi,peft,evaluation]" $PIP_INDEX
+pip install "$LEROBOT_SPEC" $PIP_INDEX
 
 echo "==> [4/4] 环境变量（写入 ~/.bashrc）"
 MARK="# >>> embodied-vla >>>"
@@ -61,4 +51,4 @@ fi
 
 echo
 echo "完成。后续执行: source ~/.bashrc && conda activate $ENV_NAME"
-python -c "import lerobot; print('lerobot ok')"
+python -c "import lerobot; print('lerobot ok', getattr(lerobot,'__version__',''))"
