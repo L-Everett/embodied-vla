@@ -11,6 +11,8 @@ import concurrent.futures
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.request
 
 UA = {"User-Agent": "Mozilla/5.0"}
@@ -55,15 +57,31 @@ def download(repo, kind, revision, path, local_dir):
     os.makedirs(os.path.dirname(dest) or ".", exist_ok=True)
     url = f"{BASE}/{kind}/{repo}/resolve/{revision}/{path}"
     tmp = dest + ".part"
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
-        while True:
-            chunk = r.read(1 << 20)
-            if not chunk:
-                break
-            f.write(chunk)
-    os.replace(tmp, dest)
-    return "ok"
+    last = None
+    for attempt in range(5):
+        try:
+            req = urllib.request.Request(url, headers=UA)
+            with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
+                while True:
+                    chunk = r.read(1 << 20)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            os.replace(tmp, dest)
+            return "ok"
+        except urllib.error.HTTPError as e:  # noqa: PERF203
+            last = e
+            if e.code in (429, 500, 502, 503, 504) and attempt < 4:
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise
+        except Exception as e:  # noqa: BLE001
+            last = e
+            if attempt < 4:
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise
+    raise last  # pragma: no cover
 
 
 def main():
@@ -73,7 +91,8 @@ def main():
     files = list_files(repo, kind, revision)
     print(f"[ms] {kind}/{repo}: {len(files)} files -> {local_dir}", flush=True)
     ok = skip = fail = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+    workers = int(os.environ.get("MS_WORKERS", "4"))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
         futs = {ex.submit(download, repo, kind, revision, p, local_dir): p for p in files}
         for i, fu in enumerate(concurrent.futures.as_completed(futs), 1):
             try:
